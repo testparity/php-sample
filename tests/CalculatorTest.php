@@ -9,8 +9,11 @@ use PHPUnit\Framework\TestCase;
 
 final class CalculatorTest extends TestCase
 {
-    public function test_adds_numbers(): void
+    public function test_covers_the_core_calculator_operations(): void
     {
-        self::assertSame(4, (new Calculator)->add(2, 2));
+        $calculator = new Calculator;
+
+        self::assertSame(4, $calculator->add(2, 2));
+        self::assertSame(3, $calculator->subtract(7, 4));
     }
 }

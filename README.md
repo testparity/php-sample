@@ -6,51 +6,48 @@
 
 [![Parity Sample](https://github.com/testparity/php-sample/actions/workflows/parity.yml/badge.svg)](https://github.com/testparity/php-sample/actions/workflows/parity.yml)
 
-This repository is a focused Parity demo for PHP. It intentionally separates aggregate file coverage from matching-test coverage, which is the core Parity use case.
+This repository is an end-to-end Parity demo for plain PHP and PHPUnit. It runs the real PHPUnit suite, generates one Clover report per test file, and lets Parity prove which test owns each class.
 
 ## What this sample proves
 
-The checked-in language-neutral `parity-coverage.json` fixture contains per-line test attribution. Parity reads that attribution and reports both all-test file coverage and how much of each source file is covered by its matching test file.
+`Calculator.php` reaches 80% when every test is combined, but `CalculatorTest.php` owns only 40%. `DiscountPolicyTest.php` supplies the other coverage by using calculator operations inside its own scenario.
 
-| Source file | Matching test | All-test file coverage | Matching-test coverage | Other covering tests | Why it matters |
-| --- | --- | ---: | ---: | ---: | --- |
-| `src/Calculator.php` | `tests/CalculatorTest.php` | 70% | 40% | 2 | Overall coverage looks acceptable, but most covered lines come from incidental tests. |
-| `src/DiscountPolicy.php` | `tests/DiscountPolicyTest.php` | 90% | 90% | 2 | The matching test owns nearly all of the file's coverage. |
-| Project total | - | 80% | - | - | Global coverage is healthy while one file still needs better direct tests. |
+| Source file | Belonging test | All tests | Belonging test | Attribution |
+| --- | --- | ---: | ---: | ---: |
+| `src/Calculator.php` | `tests/CalculatorTest.php` | 80% | 40% | `2|1` |
+| `src/DiscountPolicy.php` | `tests/DiscountPolicyTest.php` | 100% | 100% | `1|0` |
+| Project total | - | 85.71% | - | - |
 
-Parity enforces these thresholds in `parity.yaml`:
+`coverage-attribution` uses `total covering tests|non-matching covering tests`. The `2|1` result exposes cross-test coverage that a normal aggregate percentage cannot.
 
-- `min_coverage_global: 80` proves the overall project can be at a release-ready level.
-- `minimum-coverage: 70` allows the intentionally weaker file to pass while still surfacing its exact percentage.
-- `matched-coverage: 40` proves Parity can distinguish the matching test from incidental coverage.
-- `coverage-attribution` is added automatically for the Parity JSON attribution fixture and reports the number of covering tests plus how many are non-matching.
+## How the proof works
+
+The matching calculator test calls `add` and `subtract`. The discount test also calls `multiply` and `divide`, while `maximum` remains intentionally uncovered. `parity test` invokes each PHPUnit file separately with Xdebug Clover coverage, writes `.parity/per-test`, and runs `parity check` automatically.
 
 ## Run locally
 
-Install the public package from Packagist:
+Requirements: PHP 8.4+, Composer, and Xdebug with coverage support.
 
 ```bash
-composer global require testparity/parity
+composer install
+composer test
+composer global require testparity/parity:^1.2
 ```
 
-Run the Parity proof:
+Generate fresh per-test evidence and check it:
+
+```bash
+parity test --config=parity.yaml --format=json
+```
+
+To inspect the same generated reports without rerunning PHPUnit:
 
 ```bash
 parity check --config=parity.yaml --format=json
 ```
 
-Expected highlights from the JSON output:
-
-- `Calculator.php`: `minimum-coverage = 70%`, `matched-coverage = 40%`, `coverage-attribution = 3|2`.
-- `DiscountPolicy.php`: `minimum-coverage = 90%`, `matched-coverage = 90%`, `coverage-attribution = 3|2`.
-- `global_coverage = 80` and `passed = true`.
+The expected result is `passed = true`, `global_coverage = 85.71`, and the file-level values shown above. No coverage fixture is committed.
 
 ## CI
 
-GitHub Actions installs `testparity/parity` from Packagist, runs any native sample test step for this ecosystem, and then runs:
-
-```bash
-parity check --config=parity.yaml --format=json
-```
-
-No private token is required.
+GitHub Actions installs locked Composer dependencies, runs the complete PHPUnit suite, installs public `testparity/parity:^1.2`, and executes `parity test`. The generated `.parity/per-test` directory and JSON result are uploaded as the `parity-per-test-evidence` artifact for 14 days. No private token is required.

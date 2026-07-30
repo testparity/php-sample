@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App;
 
-class DiscountPolicy
+final class DiscountPolicy
 {
     public function apply(float $subtotal, bool $vip = false): float
     {
