@@ -51,3 +51,5 @@ The expected result is `passed = true`, `global_coverage = 85.71`, and the file-
 ## CI
 
 GitHub Actions installs locked Composer dependencies, runs the complete PHPUnit suite, installs public `testparity/parity:^1.2`, and executes `parity test`. The generated `.parity/per-test` directory and JSON result are uploaded as the `parity-per-test-evidence` artifact for 14 days. No private token is required.
+
+[![advertisement](https://ads.servead.net/i/399e4644-a307-48bd-9b59-b72dbf6edcfd.svg)](https://ads.servead.net/c/399e4644-a307-48bd-9b59-b72dbf6edcfd)
